@@ -4,6 +4,7 @@ import { calculateNetLiquidity, calculateCashflowSummary } from '../services/bal
 import {
   calculateCardCurrentBalance,
   getCardMetrics,
+  registerCardPurchaseInDb,
 } from '../services/cardBalanceService';
 import { generateMsiPlanData, cancelMsiPlanInDb } from '../services/msiService';
 import { registerCashbackInDb, accreditPendingCashbackInDb } from '../services/cashbackService';
@@ -189,5 +190,79 @@ describe('Module 2: Credit Cards, MSI & Cashback Integration Lifecycle', () => {
     expect(cancelledCount).toBe(2); // Cuotas 2 y 3 canceladas
     const updatedPlan = await db.msiPlans.get(plan.id);
     expect(updatedPlan?.status).toBe('CANCELLED');
+  });
+
+  it('prevents creating a purchase combining MSI and directImpact (mutually exclusive)', async () => {
+    let accounts = await db.accounts.toArray();
+    let txs = await db.transactions.toArray();
+    let msiInsts = await db.msiInstallments.toArray();
+    let cashbacks = await db.cashbackRecords.toArray();
+
+    // 1. Estado inicial de prueba: $10,000 en débito, tarjeta en $0
+    expect(calculateNetLiquidity(accounts, txs)).toBe(10000);
+    expect(calculateCardCurrentBalance(testCard.id, txs, msiInsts, cashbacks)).toBe(0);
+
+    // 2. Intento vía servicio registerCardPurchaseInDb: Debe rechazar la combinación
+    await expect(
+      registerCardPurchaseInDb({
+        creditCardId: testCard.id,
+        amount: 3000,
+        date: getTodayDateString(),
+        concept: 'Compra prohibida MSI + Direct Impact',
+        isMsi: true,
+        installmentsCount: 3,
+        directImpact: true,
+        debitAccountId: debitAccount.id,
+      })
+    ).rejects.toThrow(/mutuamente excluyentes/i);
+
+    // 3. Intento vía generateMsiPlanData con directImpact: true: Debe lanzar excepción
+    expect(() =>
+      generateMsiPlanData({
+        creditCardId: testCard.id,
+        purchaseTransactionId: 'tx-invalid-msi',
+        concept: 'Plan prohibido',
+        totalAmount: 3000,
+        totalInstallments: 3,
+        purchaseDate: getTodayDateString(),
+        cutoffDay: testCard.cutoffDay,
+        directImpact: true,
+      })
+    ).toThrow(/mutuamente excluyentes/i);
+
+    // 4. Intento vía inserción directa en Dexie (db.transactions.add): Hook de integridad debe abortar
+    const forbiddenTx: Transaction = {
+      id: 'tx-forbidden-msi-direct',
+      date: getTodayDateString(),
+      amount: 3000,
+      type: 'EXPENSE',
+      classification: 'FIXED',
+      accountId: debitAccount.id,
+      creditCardId: testCard.id,
+      directImpact: true,
+      msiPlanId: 'msi-plan-forbidden',
+      tags: ['msi'],
+      isCancelled: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await expect(db.transactions.add(forbiddenTx)).rejects.toThrow(
+      /mutuamente excluyentes/i
+    );
+
+    // 5. Verificar que ninguna transacción corrupta o inválida fue persistida en la BD
+    const allTxs = await db.transactions.toArray();
+    expect(allTxs.find((t) => t.id === 'tx-forbidden-msi-direct')).toBeUndefined();
+    expect(allTxs.length).toBe(0);
+
+    // 6. Verificar que la liquidez y el pasivo de la tarjeta permanecen intactos (cero doble cobro)
+    accounts = await db.accounts.toArray();
+    txs = await db.transactions.toArray();
+    msiInsts = await db.msiInstallments.toArray();
+    cashbacks = await db.cashbackRecords.toArray();
+
+    expect(calculateNetLiquidity(accounts, txs)).toBe(10000);
+    expect(calculateCardCurrentBalance(testCard.id, txs, msiInsts, cashbacks)).toBe(0);
   });
 });

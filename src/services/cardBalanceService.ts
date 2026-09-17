@@ -2,8 +2,11 @@ import type {
   CreditCard,
   Transaction,
   MsiInstallment,
+  MsiPlan,
   CashbackRecord,
 } from '../types/models';
+import { db } from '../db/database';
+import { generateMsiPlanData } from './msiService';
 
 export interface CardBalanceResult {
   cardId: string;
@@ -180,4 +183,120 @@ export function calculateAllCardsSummary(
     totalAvailableCredit: Math.round(totalAvailableCredit * 100) / 100,
     cards: cardResults,
   };
+}
+
+export interface RegisterCardPurchaseParams {
+  creditCardId: string;
+  amount: number;
+  date: string;
+  concept: string;
+  categoryId?: string;
+  subcategoryId?: string;
+  tags?: string[];
+  isMsi?: boolean;
+  installmentsCount?: number;
+  cutoffDay?: number;
+  directImpact?: boolean;
+  debitAccountId?: string;
+}
+
+/**
+ * Valida que una compra con tarjeta sea consistente.
+ * REGLA CRÍTICA: MSI e Impacto Directo son estrictamente mutuamente excluyentes
+ * para evitar el doble descuento de liquidez (contado hoy + cuotas futuras de TC).
+ */
+export function validateCardPurchase(params: {
+  amount: number;
+  creditCardId: string;
+  isMsi?: boolean;
+  directImpact?: boolean;
+  debitAccountId?: string;
+}): { isValid: boolean; error?: string } {
+  if (params.amount <= 0) {
+    return { isValid: false, error: 'Ingresa un monto válido mayor a 0' };
+  }
+  if (!params.creditCardId) {
+    return { isValid: false, error: 'Selecciona una tarjeta de crédito' };
+  }
+  if (params.isMsi && params.directImpact) {
+    return {
+      isValid: false,
+      error: 'MSI e Impacto Directo en Liquidez son mutuamente excluyentes (no se pueden activar al mismo tiempo)',
+    };
+  }
+  if (params.directImpact && !params.debitAccountId) {
+    return {
+      isValid: false,
+      error: 'Selecciona la cuenta de débito/efectivo para el impacto directo',
+    };
+  }
+  return { isValid: true };
+}
+
+/**
+ * Registra una compra con tarjeta en la base de datos (con o sin MSI, con o sin impacto directo).
+ */
+export async function registerCardPurchaseInDb(params: RegisterCardPurchaseParams): Promise<{
+  transaction: Transaction;
+  msiPlan?: MsiPlan;
+}> {
+  const validation = validateCardPurchase(params);
+  if (!validation.isValid) {
+    throw new Error(validation.error);
+  }
+
+  const txId = `tx-card-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  let msiPlan: MsiPlan | undefined;
+  let msiPlanId: string | undefined;
+
+  if (params.isMsi) {
+    let cutoffDay = params.cutoffDay;
+    if (cutoffDay === undefined) {
+      const card = await db.creditCards.get(params.creditCardId);
+      cutoffDay = card?.cutoffDay ?? 1;
+    }
+    const installmentsCount = params.installmentsCount || 3;
+
+    const { plan, installments } = generateMsiPlanData({
+      creditCardId: params.creditCardId,
+      purchaseTransactionId: txId,
+      concept: params.concept.trim() || 'Compra a MSI',
+      totalAmount: params.amount,
+      totalInstallments: installmentsCount,
+      purchaseDate: params.date,
+      cutoffDay,
+      directImpact: params.directImpact,
+    });
+
+    msiPlan = plan;
+    msiPlanId = plan.id;
+
+    await db.transaction('rw', db.msiPlans, db.msiInstallments, async () => {
+      await db.msiPlans.add(plan);
+      await db.msiInstallments.bulkAdd(installments);
+    });
+  }
+
+  const newTx: Transaction = {
+    id: txId,
+    date: params.date,
+    amount: params.amount,
+    type: 'EXPENSE',
+    classification: params.isMsi ? 'FIXED' : 'VARIABLE',
+    categoryId: params.categoryId || undefined,
+    subcategoryId: params.subcategoryId || undefined,
+    accountId: params.directImpact ? (params.debitAccountId || params.creditCardId) : params.creditCardId,
+    creditCardId: params.creditCardId,
+    directImpact: params.directImpact,
+    msiPlanId,
+    tags: params.isMsi ? [...(params.tags || []), 'msi'] : (params.tags || []),
+    notes: params.concept.trim() || (params.isMsi ? `Compra a ${params.installmentsCount || 3} MSI` : 'Compra con tarjeta'),
+    isCancelled: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await db.transactions.add(newTx);
+
+  return { transaction: newTx, msiPlan };
 }

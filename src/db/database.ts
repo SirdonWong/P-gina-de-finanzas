@@ -42,6 +42,20 @@ export class FinanceDatabase extends Dexie {
       debtPayments: 'id, debtId, transactionId',
       syncMetadata: 'key',
     });
+
+    this.transactions.hook('creating', (_primKey, obj) => {
+      if (obj.directImpact && obj.msiPlanId) {
+        throw new Error('MSI e Impacto Directo en Liquidez son mutuamente excluyentes');
+      }
+    });
+
+    this.transactions.hook('updating', (modifications: Partial<Transaction>, _primKey, obj) => {
+      const directImpact = modifications.directImpact !== undefined ? modifications.directImpact : obj.directImpact;
+      const msiPlanId = modifications.msiPlanId !== undefined ? modifications.msiPlanId : obj.msiPlanId;
+      if (directImpact && msiPlanId) {
+        throw new Error('MSI e Impacto Directo en Liquidez son mutuamente excluyentes');
+      }
+    });
   }
 
   async populateDefaultsIfEmpty() {

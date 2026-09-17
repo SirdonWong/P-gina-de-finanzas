@@ -71,6 +71,7 @@ export function generateMsiPlanData(params: {
   totalInstallments: number;
   purchaseDate: string;
   cutoffDay: number;
+  directImpact?: boolean;
 }): { plan: MsiPlan; installments: MsiInstallment[] } {
   const {
     creditCardId,
@@ -80,7 +81,12 @@ export function generateMsiPlanData(params: {
     totalInstallments,
     purchaseDate,
     cutoffDay,
+    directImpact,
   } = params;
+
+  if (directImpact) {
+    throw new Error('No se puede diferir a MSI con Impacto Directo en Liquidez (son mutuamente excluyentes)');
+  }
 
   const installmentAmounts = splitAmountIntoInstallments(totalAmount, totalInstallments);
   const cutoffDates = calculateMsiCutoffDates(purchaseDate, cutoffDay, totalInstallments);

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Tag as TagIcon, Plus } from 'lucide-react';
-import type { CreditCard, Category, Account, Transaction } from '../../types/models';
-import { db } from '../../db/database';
+import type { CreditCard, Category, Account } from '../../types/models';
 import { getTodayDateString } from '../../utils/dateUtils';
 import { parseAmount, formatCurrency } from '../../utils/formatters';
-import { generateMsiPlanData, calculateMsiCutoffDates } from '../../services/msiService';
+import { calculateMsiCutoffDates } from '../../services/msiService';
+import { registerCardPurchaseInDb } from '../../services/cardBalanceService';
 
 interface CardPurchaseModalProps {
   isOpen: boolean;
@@ -30,7 +30,7 @@ export const CardPurchaseModal: React.FC<CardPurchaseModalProps> = ({
   const [categoryId, setCategoryId] = useState('');
   const [subcategoryId, setSubcategoryId] = useState('');
 
-  // Flags
+  // Flags (MSI e Impacto Directo son mutuamente excluyentes)
   const [isMsi, setIsMsi] = useState(false);
   const [installmentsCount, setInstallmentsCount] = useState<number>(3);
   const [directImpact, setDirectImpact] = useState(false);
@@ -62,6 +62,20 @@ export const CardPurchaseModal: React.FC<CardPurchaseModalProps> = ({
     }
   };
 
+  const handleMsiToggle = (checked: boolean) => {
+    setIsMsi(checked);
+    if (checked) {
+      setDirectImpact(false);
+    }
+  };
+
+  const handleDirectImpactToggle = (checked: boolean) => {
+    setDirectImpact(checked);
+    if (checked) {
+      setIsMsi(false);
+    }
+  };
+
   const previewCutoffDates = selectedCard && isMsi && installmentsCount > 0
     ? calculateMsiCutoffDates(date, selectedCard.cutoffDay, installmentsCount)
     : [];
@@ -82,61 +96,36 @@ export const CardPurchaseModal: React.FC<CardPurchaseModalProps> = ({
       setError('Selecciona una tarjeta de crédito');
       return;
     }
+    if (isMsi && directImpact) {
+      setError('MSI e Impacto Directo en Liquidez son mutuamente excluyentes');
+      return;
+    }
     if (directImpact && !debitAccountId) {
       setError('Selecciona la cuenta de débito/efectivo para el impacto directo');
       return;
     }
 
-    const txId = `tx-card-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-
-    // Si es MSI, generar plan y cuotas
-    let msiPlanId: string | undefined;
-
-    if (isMsi && selectedCard) {
-      const { plan, installments } = generateMsiPlanData({
-        creditCardId: selectedCard.id,
-        purchaseTransactionId: txId,
-        concept: concept.trim() || 'Compra a MSI',
-        totalAmount: parsedAmount,
-        totalInstallments: installmentsCount,
-        purchaseDate: date,
-        cutoffDay: selectedCard.cutoffDay,
-      });
-
-      msiPlanId = plan.id;
-
-      await db.transaction('rw', db.msiPlans, db.msiInstallments, async () => {
-        await db.msiPlans.add(plan);
-        await db.msiInstallments.bulkAdd(installments);
-      });
-    }
-
-    const newTx: Transaction = {
-      id: txId,
-      date,
-      amount: parsedAmount,
-      type: 'EXPENSE',
-      classification: isMsi ? 'FIXED' : 'VARIABLE',
-      categoryId: categoryId || undefined,
-      subcategoryId: subcategoryId || undefined,
-      accountId: directImpact ? debitAccountId : creditCardId,
-      creditCardId: selectedCard?.id,
-      directImpact,
-      msiPlanId,
-      tags: isMsi ? [...tags, 'msi'] : tags,
-      notes: concept.trim() || (isMsi ? `Compra a ${installmentsCount} MSI` : 'Compra con tarjeta'),
-      isCancelled: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
     try {
-      await db.transactions.add(newTx);
+      await registerCardPurchaseInDb({
+        creditCardId,
+        amount: parsedAmount,
+        date,
+        concept,
+        categoryId: categoryId || undefined,
+        subcategoryId: subcategoryId || undefined,
+        tags,
+        isMsi,
+        installmentsCount,
+        cutoffDay: selectedCard?.cutoffDay,
+        directImpact,
+        debitAccountId,
+      });
       onSuccess?.();
       onClose();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError('Error al registrar la compra con tarjeta');
+      const message = err instanceof Error ? err.message : 'Error al registrar la compra con tarjeta';
+      setError(message);
     }
   };
 
@@ -294,103 +283,116 @@ export const CardPurchaseModal: React.FC<CardPurchaseModalProps> = ({
           </div>
 
           {/* Toggle Meses Sin Intereses */}
-          <div
-            style={{
-              background: 'var(--bg-elevated)',
-              border: isMsi ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              padding: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={18} color="var(--primary)" />
-                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Diferir a Meses Sin Intereses (MSI)</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={isMsi}
-                onChange={(e) => setIsMsi(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
-              />
-            </label>
-
-            {isMsi && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px' }}>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {[3, 6, 9, 12, 18, 24].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`tab-btn ${installmentsCount === n ? 'active' : ''}`}
-                      style={{ padding: '6px 8px', fontSize: '0.78rem' }}
-                      onClick={() => setInstallmentsCount(n)}
-                    >
-                      {n} MSI
-                    </button>
-                  ))}
+          {!directImpact && (
+            <div
+              style={{
+                background: 'var(--bg-elevated)',
+                border: isMsi ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-md)',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} color="var(--primary)" />
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Diferir a Meses Sin Intereses (MSI)</span>
                 </div>
+                <input
+                  type="checkbox"
+                  checked={isMsi}
+                  onChange={(e) => handleMsiToggle(e.target.checked)}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
+                />
+              </label>
 
-                {parsedAmount > 0 && previewCutoffDates.length > 0 && (
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '8px 10px', borderRadius: 'var(--radius-sm)' }}>
-                    <span>{installmentsCount} cuotas de <strong>{formatCurrency(previewInstallmentAmount)}</strong></span>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      1er corte programado: <strong>{previewCutoffDates[0]}</strong>
-                    </div>
+              {isMsi && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {[3, 6, 9, 12, 18, 24].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`tab-btn ${installmentsCount === n ? 'active' : ''}`}
+                        style={{ padding: '6px 8px', fontSize: '0.78rem' }}
+                        onClick={() => setInstallmentsCount(n)}
+                      >
+                        {n} MSI
+                      </button>
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+
+                  {parsedAmount > 0 && previewCutoffDates.length > 0 && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', background: 'var(--bg-card)', padding: '8px 10px', borderRadius: 'var(--radius-sm)' }}>
+                      <span>{installmentsCount} cuotas de <strong>{formatCurrency(previewInstallmentAmount)}</strong></span>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        1er corte programado: <strong>{previewCutoffDates[0]}</strong>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    * Al diferir a MSI, la opción de Impacto Directo en Liquidez queda desactivada.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Toggle Impacto Directo en Liquidez */}
-          <div
-            style={{
-              background: 'var(--bg-elevated)',
-              border: directImpact ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              padding: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}
-          >
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-              <div>
-                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Impacto Directo en Liquidez</span>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  Descuenta el dinero inmediatamente de tu cuenta bancaria (no genera deuda por pagar en la tarjeta).
+          {!isMsi && (
+            <div
+              style={{
+                background: 'var(--bg-elevated)',
+                border: directImpact ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-md)',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Impacto Directo en Liquidez</span>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    Descuenta el dinero inmediatamente de tu cuenta bancaria (no genera deuda por pagar en la tarjeta).
+                  </div>
                 </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={directImpact}
-                onChange={(e) => setDirectImpact(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--accent-blue)' }}
-              />
-            </label>
+                <input
+                  type="checkbox"
+                  checked={directImpact}
+                  onChange={(e) => handleDirectImpactToggle(e.target.checked)}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--accent-blue)' }}
+                />
+              </label>
 
-            {directImpact && (
-              <div className="form-group" style={{ paddingTop: '4px' }}>
-                <label className="form-label">Cuenta de respaldo (donde se descuenta hoy)</label>
-                <select
-                  className="form-select"
-                  value={debitAccountId}
-                  onChange={(e) => setDebitAccountId(e.target.value)}
-                  required
-                >
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({a.type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
+              {directImpact && (
+                <>
+                  <div className="form-group" style={{ paddingTop: '4px' }}>
+                    <label className="form-label">Cuenta de respaldo (donde se descuenta hoy)</label>
+                    <select
+                      className="form-select"
+                      value={debitAccountId}
+                      onChange={(e) => setDebitAccountId(e.target.value)}
+                      required
+                    >
+                      {accounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.type})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    * Al descontar de contado hoy en tu liquidez, la opción de diferir a MSI queda desactivada.
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           <button type="submit" className="btn-primary" style={{ marginTop: '6px' }}>
             Registrar Compra con Tarjeta
