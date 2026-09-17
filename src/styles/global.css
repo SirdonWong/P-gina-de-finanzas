@@ -16,6 +16,8 @@ html, body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -26,12 +28,21 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
+}
+
+/* Numeración financiera alineada y estilizada */
+.tabular-nums,
+.hero-amount,
+.tx-amount,
+.form-input-amount,
+.stat-value {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Contenedor responsivo centrado con look de app nativa móvil */
@@ -46,6 +57,11 @@ button, input, select, textarea {
   gap: 20px;
 }
 
+/* Transiciones suaves al alternar temas */
+html, body, .app-container, .modal-content, .btn-primary, .btn-secondary, .bottom-nav, .hero-balance-card {
+  transition: background-color var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
+}
+
 /* Utilidades de scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -55,7 +71,7 @@ button, input, select, textarea {
   background: var(--bg-app);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-elevated);
+  background: var(--border-strong);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {

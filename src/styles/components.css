@@ -19,22 +19,20 @@
 .brand-icon-wrapper {
   width: 38px;
   height: 38px;
-  background: linear-gradient(135deg, var(--primary), #047857);
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px var(--primary-light);
 }
 
 .brand-title {
   font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.1;
-  background: linear-gradient(to right, #ffffff, #94a3b8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
 .brand-subtitle {
@@ -49,7 +47,7 @@
    Tarjetas de Estadísticas / Saldo Principal (Glassmorphism)
    ========================================================================== */
 .hero-balance-card {
-  background: linear-gradient(180deg, #111a2e 0%, #0d1527 100%);
+  background: var(--bg-hero-balance);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   padding: 24px;
@@ -65,7 +63,7 @@
   right: -40px;
   width: 130px;
   height: 130px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -85,7 +83,7 @@
 .hero-amount {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-primary);
   letter-spacing: -0.035em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -160,7 +158,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .breakdown-item {
@@ -231,7 +229,7 @@
   justify-content: center;
   gap: 10px;
   background: var(--primary);
-  color: #03150d;
+  color: #ffffff;
   border: none;
   border-radius: var(--radius-lg);
   padding: 13px 20px;
@@ -239,19 +237,19 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.26);
+  box-shadow: 0 4px 14px var(--primary-light);
   transition: all var(--transition-fast);
 }
 
 .btn-primary-hero:hover {
   background: var(--primary-hover);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.38);
+  box-shadow: 0 6px 20px var(--primary-light);
   transform: translateY(-1px);
 }
 
 .btn-primary-hero:active {
   transform: scale(0.985);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 8px var(--primary-light);
 }
 
 .btn-primary-hero-icon {
@@ -635,7 +633,7 @@
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .form-input-amount {
@@ -682,7 +680,7 @@
   justify-content: center;
   gap: 8px;
   transition: var(--transition-fast);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 12px var(--primary-light);
 }
 
 .btn-primary:hover {
@@ -727,7 +725,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(10, 15, 29, 0.92);
+  background: var(--bg-glass);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-subtle);
   padding: 8px 16px;
@@ -738,6 +736,7 @@
   align-items: center;
   max-width: var(--max-content-width);
   margin: 0 auto;
+  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 769px) {
@@ -776,14 +775,14 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), #059669);
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #fff;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 14px var(--primary-light);
   transform: translateY(-8px);
   transition: var(--transition-fast);
 }
@@ -806,14 +805,14 @@
 
 .alert-card.warning {
   background: var(--warning-bg);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--warning);
+  border: 1px solid var(--warning);
 }
 
 .alert-card.info {
   background: var(--accent-blue-light);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--accent-blue);
+  border: 1px solid var(--accent-blue);
 }
 
 .empty-state {
@@ -861,7 +860,7 @@
 
 .help-icon-btn.active {
   background: var(--primary);
-  color: #041a12;
+  color: var(--text-inverse);
   border-color: var(--primary);
 }
 
@@ -875,8 +874,8 @@
 /* Tarjeta explicativa contextual (inline / popover seguro sin desborde) */
 .inline-help-card {
   margin-top: 8px;
-  background: linear-gradient(180deg, #162238 0%, #0f182c 100%);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--primary);
   border-radius: var(--radius-md);
   padding: 12px 14px;
   box-shadow: var(--shadow-md);
@@ -923,4 +922,46 @@
   color: var(--text-secondary);
   line-height: 1.45;
   margin: 0;
+}
+
+/* ==========================================================================
+   Selector de Tema en Ajustes (Segmented Control)
+   ========================================================================== */
+.theme-segmented-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: var(--bg-input);
+  padding: 4px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.theme-option-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.theme-option-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.theme-option-btn.active {
+  background: var(--bg-card);
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-subtle);
 }

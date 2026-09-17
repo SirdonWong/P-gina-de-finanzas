@@ -43,6 +43,18 @@ describe('Onboarding & Contextual Help System', () => {
       saveStoredPreferences({ hasCompletedOnboarding: false });
       expect(getStoredPreferences().hasCompletedOnboarding).toBe(false);
     });
+
+    it('persists theme toggle between dark and light', () => {
+      expect(getStoredPreferences().theme).toBe('dark');
+
+      const updated = saveStoredPreferences({ theme: 'light' });
+      expect(updated.theme).toBe('light');
+      expect(getStoredPreferences().theme).toBe('light');
+
+      const backToDark = saveStoredPreferences({ theme: 'dark' });
+      expect(backToDark.theme).toBe('dark');
+      expect(getStoredPreferences().theme).toBe('dark');
+    });
   });
 
   describe('Onboarding Steps Content & Beginner-Friendly Language', () => {

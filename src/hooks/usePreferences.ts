@@ -46,6 +46,9 @@ export function saveStoredPreferences(prefs: Partial<AppPreferences>): AppPrefer
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
       window.dispatchEvent(new Event('storage'));
     }
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', updated.theme || 'dark');
+    }
   }
   return updated;
 }
@@ -62,10 +65,25 @@ export function usePreferences() {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const activeTheme = preferences.theme || 'dark';
+      document.documentElement.setAttribute('data-theme', activeTheme);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', activeTheme === 'light' ? '#f8fafc' : '#080c15');
+      }
+    }
+  }, [preferences.theme]);
+
   const updatePreferences = useCallback((newPrefs: Partial<AppPreferences>) => {
     const updated = saveStoredPreferences(newPrefs);
     setPreferencesState(updated);
   }, []);
+
+  const setTheme = useCallback((theme: 'dark' | 'light') => {
+    updatePreferences({ theme });
+  }, [updatePreferences]);
 
   const completeOnboarding = useCallback(() => {
     updatePreferences({ hasCompletedOnboarding: true });
@@ -78,8 +96,10 @@ export function usePreferences() {
   return {
     preferences,
     updatePreferences,
+    setTheme,
     completeOnboarding,
     resetOnboarding,
+    theme: preferences.theme || 'dark',
     hasCompletedOnboarding: preferences.hasCompletedOnboarding,
   };
 }

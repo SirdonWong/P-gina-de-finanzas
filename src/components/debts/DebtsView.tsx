@@ -63,12 +63,12 @@ export const DebtsView: React.FC<DebtsViewProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       {/* Panel Centralizado de Cobranza (Hero Card) */}
-      <section className="hero-balance-card" style={{ background: 'linear-gradient(145deg, #122822 0%, #0d1527 100%)' }}>
+      <section className="hero-balance-card" style={{ background: 'var(--bg-hero-debts)' }}>
         <div className="hero-label">
           <HandCoins size={16} color="var(--primary)" />
           <span>Total por Cobrar (Cuentas por Cobrar)</span>
         </div>
-        <div className="hero-amount" style={{ color: summary.totalPending > 0 ? 'var(--primary-text)' : '#ffffff' }}>
+        <div className="hero-amount" style={{ color: summary.totalPending > 0 ? 'var(--income)' : 'var(--text-primary)' }}>
           {format(summary.totalPending)}
         </div>
 

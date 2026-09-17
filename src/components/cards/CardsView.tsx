@@ -87,12 +87,12 @@ export const CardsView: React.FC<CardsViewProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       {/* Resumen Global de Crédito */}
-      <section className="hero-balance-card" style={{ background: 'linear-gradient(145deg, #1b1633 0%, #0d1527 100%)' }}>
+      <section className="hero-balance-card" style={{ background: 'var(--bg-hero-cards)' }}>
         <div className="hero-label">
           <CardIcon size={16} color="var(--accent-purple)" />
           <span>Pasivo Total en Tarjetas</span>
         </div>
-        <div className="hero-amount" style={{ color: globalSummary.totalCurrentBalance > 0 ? '#fca5a5' : '#ffffff' }}>
+        <div className="hero-amount" style={{ color: globalSummary.totalCurrentBalance > 0 ? 'var(--expense)' : 'var(--text-primary)' }}>
           {format(globalSummary.totalCurrentBalance)}
         </div>
 
@@ -212,7 +212,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
                 <div
                   key={card.id}
                   style={{
-                    background: `linear-gradient(135deg, #131c31 0%, #0d1527 100%)`,
+                    background: 'var(--bg-card)',
                     border: '1px solid var(--border-strong)',
                     borderLeft: `5px solid ${card.color || 'var(--accent-purple)'}`,
                     borderRadius: 'var(--radius-xl)',

@@ -16,7 +16,10 @@ import {
   Wallet,
   Gift,
   Users,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { usePreferences } from '../../hooks/usePreferences';
 import { useCurrency } from '../../hooks/useCurrency';
 import {
   downloadBackupFile,
@@ -41,6 +44,8 @@ interface SettingsViewProps {
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh, onOpenOnboarding }) => {
   const { currency, setCurrency } = useCurrency();
+  const { preferences, setTheme } = usePreferences();
+  const currentTheme = preferences.theme || 'dark';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Estados de sincronización
@@ -162,6 +167,61 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh, onOpenOnb
     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       <div className="section-header">
         <h3 className="section-title">Ajustes del Sistema</h3>
+      </div>
+
+      {/* Apariencia y Tema (Modo Claro / Modo Oscuro) */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-xl)',
+          padding: '18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--primary-light)',
+              color: 'var(--primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {currentTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600 }}>Apariencia y Tema</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Elige entre el tema oscuro de alto contraste o el tema claro editorial.
+            </div>
+          </div>
+        </div>
+
+        <div className="theme-segmented-control">
+          <button
+            type="button"
+            className={`theme-option-btn ${currentTheme === 'dark' ? 'active' : ''}`}
+            onClick={() => setTheme('dark')}
+          >
+            <Moon size={16} />
+            <span>Tema Oscuro</span>
+          </button>
+          <button
+            type="button"
+            className={`theme-option-btn ${currentTheme === 'light' ? 'active' : ''}`}
+            onClick={() => setTheme('light')}
+          >
+            <Sun size={16} />
+            <span>Tema Claro</span>
+          </button>
+        </div>
       </div>
 
       {/* Moneda Predeterminada */}

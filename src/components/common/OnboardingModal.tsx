@@ -289,10 +289,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 height: '4px',
                 borderRadius: '2px',
                 background:
-                  idx === currentStep
+                    idx === currentStep
                     ? 'var(--primary)'
                     : idx < currentStep
-                    ? 'rgba(16, 185, 129, 0.4)'
+                    ? 'var(--primary-light)'
                     : 'var(--border-strong)',
                 cursor: 'pointer',
                 transition: 'background var(--transition-fast)',
