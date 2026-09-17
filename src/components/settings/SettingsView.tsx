@@ -11,6 +11,11 @@ import {
   AlertCircle,
   Clock,
   ShieldCheck,
+  BookOpen,
+  CreditCard,
+  Wallet,
+  Gift,
+  Users,
 } from 'lucide-react';
 import { useCurrency } from '../../hooks/useCurrency';
 import {
@@ -31,9 +36,10 @@ const CURRENCIES = [
 
 interface SettingsViewProps {
   onRefresh?: () => Promise<void>;
+  onOpenOnboarding?: () => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh, onOpenOnboarding }) => {
   const { currency, setCurrency } = useCurrency();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -204,6 +210,239 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onRefresh }) => {
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Sección: Cómo funciona */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-xl)',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--accent-blue-light)',
+                color: 'var(--accent-blue)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <BookOpen size={18} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cómo funciona</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Guía clara de los conceptos clave para cuidar tu dinero sin complicaciones.
+              </div>
+            </div>
+          </div>
+
+          {onOpenOnboarding && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={onOpenOnboarding}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.82rem',
+                padding: '7px 14px',
+              }}
+            >
+              <Sparkles size={15} color="var(--primary)" />
+              Ver tutorial interactivo
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Concepto 1 */}
+          <div
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '14px 16px',
+              display: 'flex',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px',
+              }}
+            >
+              <Wallet size={16} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Saldo neto disponible</span>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                Es la cantidad real de dinero libre que tienes para gastar hoy. La aplicación suma todo lo que tienes en tus cuentas de banco y en efectivo, y le resta lo que debes en tus tarjetas y lo que necesitas apartar para tus gastos fijos del mes. Si este número es positivo, vas por muy buen camino.
+              </p>
+            </div>
+          </div>
+
+          {/* Concepto 2 */}
+          <div
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '14px 16px',
+              display: 'flex',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(59, 130, 246, 0.12)',
+                color: 'var(--accent-blue)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px',
+              }}
+            >
+              <CreditCard size={16} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Compra normal con tarjeta vs. Impacto Directo</span>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                En una compra normal con tarjeta, el banco paga la cuenta por ti hoy y tú acumulas esa deuda para liquidarla antes de tu fecha límite de pago. En una compra con Impacto Directo, el dinero se descuenta hoy mismo de tu cuenta de débito o efectivo. Es ideal cuando usas tu tarjeta para ganar puntos o recompensas pero tienes el dinero listo y prefieres no dejar deudas pendientes para fin de mes.
+              </p>
+            </div>
+          </div>
+
+          {/* Concepto 3 */}
+          <div
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '14px 16px',
+              display: 'flex',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(245, 158, 11, 0.12)',
+                color: 'var(--accent-amber)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px',
+              }}
+            >
+              <Sparkles size={16} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Meses Sin Intereses (MSI)</span>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                Te permite dividir el costo total de una compra grande en pagos mensuales iguales sin pagar un centavo extra. Cada mes solo se te cobrará la cuota que toca en ese periodo, permitiéndote comprar cosas importantes sin tener que gastar todos tus ahorros de golpe.
+              </p>
+            </div>
+          </div>
+
+          {/* Concepto 4 */}
+          <div
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '14px 16px',
+              display: 'flex',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(168, 85, 247, 0.12)',
+                color: 'var(--accent-purple)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px',
+              }}
+            >
+              <Gift size={16} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Los dos destinos del Cashback</span>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                El cashback es dinero de premio que te devuelven por tus compras. Puedes elegir dos destinos para ese dinero: Saldo a Favor en Tarjeta descuenta de inmediato lo que le debes al banco en tu estado de cuenta; Efectivo Pendiente guarda el dinero en una alcancía virtual para que lo retires a tu cuenta bancaria cuando tú lo decidas.
+              </p>
+            </div>
+          </div>
+
+          {/* Concepto 5 */}
+          <div
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '14px 16px',
+              display: 'flex',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(236, 72, 153, 0.12)',
+                color: '#ec4899',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px',
+              }}
+            >
+              <Users size={16} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Cómo funciona un préstamo a un tercero</span>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                Cuando le prestas dinero a un amigo o familiar, ese dinero sale de tu cuenta hoy, pero la aplicación recuerda que ese dinero sigue siendo tuyo y que te lo van a devolver. Por eso, no lo cuenta como un gasto perdido, sino como dinero pendiente por cobrar que suma a tu favor.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Sincronización al Abrir */}

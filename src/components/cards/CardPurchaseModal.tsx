@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Tag as TagIcon, Plus } from 'lucide-react';
+import { HelpButton } from '../common/HelpButton';
 import type { CreditCard, Category, Account } from '../../types/models';
 import { getTodayDateString } from '../../utils/dateUtils';
 import { parseAmount, formatCurrency } from '../../utils/formatters';
@@ -299,6 +300,10 @@ export const CardPurchaseModal: React.FC<CardPurchaseModalProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Sparkles size={18} color="var(--primary)" />
                   <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Diferir a Meses Sin Intereses (MSI)</span>
+                  <HelpButton
+                    title="Meses Sin Intereses (MSI)"
+                    description="Divide tu compra en cuotas mensuales fijas sin costo adicional. Cada mes solo pagas la parte que corresponde a ese periodo, sin acumular intereses."
+                  />
                 </div>
                 <input
                   type="checkbox"
@@ -355,9 +360,15 @@ export const CardPurchaseModal: React.FC<CardPurchaseModalProps> = ({
               }}
             >
               <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                <div>
-                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Impacto Directo en Liquidez</span>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ flex: 1, paddingRight: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Impacto Directo en Liquidez</span>
+                    <HelpButton
+                      title="Impacto Directo en Liquidez"
+                      description="Resta el dinero hoy mismo de tu cuenta bancaria o efectivo. Úsalo si tienes el dinero listo y no quieres arrastrar deuda para la fecha de pago de tu tarjeta."
+                    />
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Descuenta el dinero inmediatamente de tu cuenta bancaria (no genera deuda por pagar en la tarjeta).
                   </div>
                 </div>

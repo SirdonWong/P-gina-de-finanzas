@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Plus, Gift, ArrowDownLeft } from 'lucide-react';
+import { HelpButton } from '../common/HelpButton';
 import type { CashbackRecord, CreditCard, Account } from '../../types/models';
 import { registerCashbackInDb, accreditPendingCashbackInDb } from '../../services/cashbackService';
 import { parseAmount } from '../../utils/formatters';
@@ -160,7 +161,13 @@ export const CashbackModal: React.FC<CashbackModalProps> = ({
             </div>
 
             <div className="form-group">
-              <label className="form-label">Destino del Cashback</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <label className="form-label" style={{ margin: 0 }}>Destino del Cashback</label>
+                <HelpButton
+                  title="Destinos del Cashback"
+                  description="Elige Saldo a Favor si quieres reducir de inmediato la deuda en tu tarjeta. Elige Efectivo Pendiente si prefieres acumular la recompensa y transferirla a tu cuenta bancaria después."
+                />
+              </div>
               <div className="filter-tabs">
                 <button
                   type="button"

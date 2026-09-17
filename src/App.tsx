@@ -7,12 +7,24 @@ import { TransactionsView } from './components/transactions/TransactionsView';
 import { CardsView } from './components/cards/CardsView';
 import { DebtsView } from './components/debts/DebtsView';
 import { SettingsView } from './components/settings/SettingsView';
+import { OnboardingModal } from './components/common/OnboardingModal';
+import { usePreferences } from './hooks/usePreferences';
 import { performStartupSync } from './services/syncService';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('transactions');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const { preferences, completeOnboarding } = usePreferences();
+  const [isManualOnboardingOpen, setIsManualOnboardingOpen] = useState(false);
+
+  // Se muestra automáticamente en el primer uso, o cuando Iván lo solicita desde Ajustes
+  const isOnboardingOpen = isManualOnboardingOpen || (isReady && !preferences.hasCompletedOnboarding);
+
+  const handleDismissOnboarding = () => {
+    completeOnboarding();
+    setIsManualOnboardingOpen(false);
+  };
 
   // Inicializar base de datos con cuentas y categorías precargadas y sincronización al abrir
   useEffect(() => {
@@ -92,13 +104,24 @@ export default function App() {
           />
         )}
 
-        {currentTab === 'settings' && <SettingsView onRefresh={handleRefresh} />}
+        {currentTab === 'settings' && (
+          <SettingsView
+            onRefresh={handleRefresh}
+            onOpenOnboarding={() => setIsManualOnboardingOpen(true)}
+          />
+        )}
       </main>
 
       <BottomNav
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         onQuickAdd={() => setIsAddModalOpen(true)}
+      />
+
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={handleDismissOnboarding}
+        onComplete={handleDismissOnboarding}
       />
     </div>
   );

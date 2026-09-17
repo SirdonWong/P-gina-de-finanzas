@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Wallet,
-  TrendingUp,
-  TrendingDown,
   Plus,
   ArrowDownLeft,
   ArrowLeftRight,
@@ -88,82 +86,86 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Tarjeta Hero: Saldo Neto en Tiempo Real */}
+      {/* Tarjeta Hero: Saldo Neto en Tiempo Real (Nivel Visual Único) */}
       <section className="hero-balance-card">
         <div className="hero-label">
-          <Wallet size={15} color="var(--primary)" />
+          <Wallet size={14} color="var(--primary)" />
           <span>Saldo Neto Disponible</span>
         </div>
         <div className="hero-amount">{format(netLiquidity)}</div>
 
-        <div className="hero-breakdown">
-          <div className="breakdown-item">
-            <div className="breakdown-icon income">
-              <TrendingUp size={16} />
-            </div>
-            <div className="breakdown-data">
-              <span className="breakdown-label">Ingresos Totales</span>
-              <span className="breakdown-val income">+{format(cashflow.totalIncome)}</span>
-            </div>
+        <div className="hero-metrics-row">
+          <div className="hero-metric">
+            <span className="hero-metric-label">
+              <span className="metric-dot income" /> Ingresos Totales
+            </span>
+            <span className="hero-metric-val income">
+              +{format(cashflow.totalIncome)}
+            </span>
           </div>
 
-          <div className="breakdown-item">
-            <div className="breakdown-icon expense">
-              <TrendingDown size={16} />
-            </div>
-            <div className="breakdown-data">
-              <span className="breakdown-label">Gastos Totales</span>
-              <span className="breakdown-val expense">-{format(cashflow.totalExpense)}</span>
-            </div>
+          <div className="hero-metric-divider" />
+
+          <div className="hero-metric">
+            <span className="hero-metric-label">
+              <span className="metric-dot expense" /> Gastos Totales
+            </span>
+            <span className="hero-metric-val expense">
+              -{format(cashflow.totalExpense)}
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Barra de Accesos Rápidos */}
-      <section className="quick-actions-bar">
+      {/* Jerarquía de Acciones: Primaria Destacada + Navegación Secundaria */}
+      <section className="view-actions-container">
         <button
-          className="quick-action-btn"
-          onClick={() => setShowAccountModal(true)}
-          aria-label="Administrar Cuentas"
-        >
-          <div className="action-icon-circle" style={{ background: 'var(--accent-blue)' }}>
-            <Wallet size={18} />
-          </div>
-          <span>Cuentas</span>
-        </button>
-
-        <button
-          className="quick-action-btn"
-          onClick={() => setShowCategoryModal(true)}
-          aria-label="Administrar Categorías"
-        >
-          <div className="action-icon-circle" style={{ background: 'var(--accent-purple)' }}>
-            <FolderTree size={18} />
-          </div>
-          <span>Categorías</span>
-        </button>
-
-        <button
-          className="quick-action-btn"
-          onClick={() => setShowRecurringModal(true)}
-          aria-label="Gastos Recurrentes"
-        >
-          <div className="action-icon-circle" style={{ background: 'var(--warning)' }}>
-            <Repeat size={18} />
-          </div>
-          <span>Recurrentes</span>
-        </button>
-
-        <button
-          className="quick-action-btn"
-          onClick={onCloseAddModal} // We can trigger the add modal directly
+          id="btn-new-transaction"
+          type="button"
+          className="btn-primary-hero"
+          onClick={onCloseAddModal}
           aria-label="Nuevo Movimiento"
         >
-          <div className="action-icon-circle" style={{ background: 'var(--primary)' }}>
-            <Plus size={18} />
+          <div className="btn-primary-hero-icon">
+            <Plus size={18} strokeWidth={2.5} />
           </div>
-          <span>Nuevo</span>
+          <span>Nuevo Movimiento</span>
         </button>
+
+        <div className="secondary-nav-group">
+          <button
+            id="btn-manage-accounts"
+            type="button"
+            className="secondary-nav-btn"
+            onClick={() => setShowAccountModal(true)}
+            aria-label="Administrar Cuentas"
+          >
+            <Wallet size={15} />
+            <span>Cuentas</span>
+          </button>
+
+          <button
+            id="btn-manage-categories"
+            type="button"
+            className="secondary-nav-btn"
+            onClick={() => setShowCategoryModal(true)}
+            aria-label="Administrar Categorías"
+          >
+            <FolderTree size={15} />
+            <span>Categorías</span>
+          </button>
+
+          <button
+            id="btn-manage-recurring"
+            type="button"
+            className="secondary-nav-btn"
+            onClick={() => setShowRecurringModal(true)}
+            aria-label="Gastos Recurrentes"
+          >
+            <Repeat size={15} />
+            <span>Recurrentes</span>
+          </button>
+        </div>
       </section>
 
       {/* Filtros y Búsqueda */}
